@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mạng Xã Hội - V16.5.4 Xem Chi Tiết Thành Viên</title>
+    <style>
+        /* === CSS HỆ THỐNG === */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; background-color: #f0f2f5; transition: background 0.3s; }
+        * { box-sizing: border-box; }
+        .view { display: none; min-height: 100vh; animation: fadeIn 0.3s ease; }
+        .active-view { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        .card { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; position: relative; overflow: hidden; }
+        h1, h2, h3, h4 { margin-top: 0; } h1 { text-align: center; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+        input:focus, textarea:focus { outline: none; border-color: #007bff; }
+        .pwd-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+        .pwd-wrapper input { margin-bottom: 0; padding-right: 40px; }
+        .eye-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; user-select: none; color: #666; z-index: 10; }
+        button { width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #166fe5; }
+        button:disabled { background: #ccc !important; color: #666 !important; cursor: not-allowed; border-color: #ccc !important; }
+        .btn-green { background: #42b72a; } .btn-green:hover { background: #36a420; }
+        .btn-red { background: #dc3545; } .btn-red:hover { background: #c82333; }
+        .btn-gray { background: #6c757d; } .btn-gray:hover { background: #5a6268; }
+        .btn-outline-red { background: transparent; color: #dc3545; border: 1px solid #dc3545; margin-top: 20px; } 
+        .btn-outline-red:hover { background: #ffe6e6; }
+        .btn-small { width: auto; padding: 8px 12px; font-size: 14px; margin-left: 5px; }
+        .btn-link { background: none; color: #1877f2; text-decoration: underline; padding: 5px; font-size: 14px; margin-top: 10px; width: auto; font-weight: normal; }
+        .top-nav { background: white; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .admin-nav { background: #1e1e1e; border-bottom: 1px solid #333; box-shadow: none; }
+        .admin-theme { background-color: #121212; color: white; }
+        .admin-theme .card { background: #1e1e1e; border: 1px solid #333; color: white; }
+        .admin-theme input { background: #2d2d2d; color: white; border-color: #444; }
+        .admin-theme .eye-icon { color: #aaa; }
+        .post { border-bottom: 1px solid #ddd; padding: 15px 0; }
+        .admin-theme .post { border-bottom-color: #333; }
+        .author { font-weight: bold; color: #1877f2; }
+        .admin-theme .author { color: #ffc107; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .admin-theme .setting-row { border-bottom: 1px solid #333; }
+        .setting-block { padding: 15px 0; border-bottom: 1px solid #eee; }
+        .admin-theme .setting-block { border-bottom: 1px solid #333; }
+        .badge-pending { background: #ffc107; color: black; font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+        .lockdown-banner { background: #dc3545; color: white; font-weight: bold; text-align: center; padding: 12px; font-size: 14px; display: none; box-shadow: inset 0 -3px 10px rgba(0,0,0,0.2); animation: pulseAlert 1.5s infinite; }
+        @keyframes pulseAlert { 0% { background-color: #dc3545; } 50% { background-color: #8b0000; } 100% { background-color: #dc3545; } }
+        #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 350px; }
+        .toast { background: #242526; color: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-left: 5px solid #1877f2; font-size: 14px; animation: slideIn 0.3s ease, fadeOut 0.3s ease 4s forwards; line-height: 1.4; }
+        .admin-theme .toast { border-left-color: #dc3545; background: #2d2d2d; }
+        @keyframes slideIn { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .member-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .admin-theme .member-item { border-bottom-color: #333; }
+        .media-upload-zone { background: #f8f9fa; border: 2px dashed #ccd0d5; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; position: relative; cursor: pointer; }
+        .admin-theme .media-upload-zone { background: #2d2d2d; border-color: #444; }
+        .media-preview-box { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .preview-item { width: 70px; height: 70px; border-radius: 4px; border: 1px solid #ddd; object-fit: cover; position: relative; }
+        .preview-file-icon { width: 70px; height: 70px; border-radius: 4px; background: #e4e6eb; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px; text-transform: uppercase; color: #333; }
+        .admin-theme .preview-file-icon { background: #3a3b3c; color: #eee; }
+        .post-media-container { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .post-img { max-width: 100%; max-height: 300px; border-radius: 6px; object-fit: contain; background: #f0f2f5; }
+        .admin-theme .post-img { background: #121212; }
+        .post-video { width: 100%; border-radius: 6px; max-height: 300px; background: black; }
+        .post-file-box { background: #f0f2f5; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: inherit; border: 1px solid #e4e6eb; }
+        .admin-theme .post-file-box { background: #2d2d2d; border-color: #444; }
+        .post-file-box:hover { background: #e4e6eb; }
+        .admin-theme .post-file-box:hover { background: #3a3b3c; }
+        .html-preview-frame { width: 100%; height: 200px; border: 1px solid #ddd; border-radius: 6px; background: white; margin-top: 5px; }
+
+        .badge-admin-zalo { background: #dc3545; color: white; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 12px; margin-left: 6px; vertical-align: middle; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .tick-verify-zalo { color: #1877f2; font-size: 14px; margin-left: 4px; vertical-align: middle; }
+
+        /* === MODAL POPUP XEM THÔNG TIN THÀNH VIÊN === */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #2d2d2d; color: white; border: 1px solid #444; width: 90%; max-width: 400px; border-radius: 8px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transform: scale(0.8); transition: transform 0.2s ease; }
+        .modal-overlay.open .modal-content { transform: scale(1); }
+        .modal-header { font-size: 18px; font-weight: bold; color: #ffc107; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { cursor: pointer; font-size: 20px; color: #aaa; } .modal-close:hover { color: white; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; border-bottom: 1px dashed #333; padding-bottom: 6px; }
+        .info-label { color: #aaa; } .info-value { font-weight: bold; color: #eee; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+    <div id="global-lockdown-alert" class="lockdown-banner">
+        ⚠️ CẢNH BÁO: HỆ THỐNG ĐANG BỊ PHONG TỎA TOÀN DIỆN! TẤT CẢ TÍNH NĂNG ĐĂNG BÀI/CHỈNH SỬA TẠM THỜI VÔ HIỆU HÓA.
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT THÀNH VIÊN -->
+    <div id="user-info-modal" class="modal-overlay" onclick="closeUserInfoModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>📋 Thông Tin Chi Tiết</span>
+                <span class="modal-close" onclick="closeUserInfoModal()">&times;</span>
+            </div>
+            <div>
+                <div class="info-row"><span class="info-label">Tên Tài Khoản:</span><span class="info-value" id="modal-username" style="color: #ffc107;">-</span></div>
+                <div class="info-row">
+                    <span class="info-label">Mật Khẩu Hiện Tại:</span>
+                    <span class="info-value" style="display: flex; align-items: center; gap: 8px;">
+                        <span id="modal-password" style="-webkit-text-security: disc; text-security: disc;">-</span>
+                        <span style="cursor: pointer; font-size: 14px;" id="modal-eye-btn" onclick="toggleModalPassword()">👁️</span>
+                    </span>
+                </div>
+                <div class="info-row"><span class="info-label">Trạng Thái:</span><span class="info-value" id="modal-status">-</span></div>
+                <div class="info-row"><span class="info-label">Quyền Rời Mạng:</span><span class="info-value" id="modal-leave">-</span></div>
+                <div class="info-row"><span class="info-label">Tổng Số Bài Viết:</span><span class="info-value" id="modal-posts-count" style="color:#1877f2;">0</span></div>
+            </div>
+            <button class="btn-gray btn-small" style="width: 100%; margin-top: 15px;" onclick="closeUserInfoModal()">Đóng Cửa Sổ</button>
+        </div>
+    </div>
+
+    <!-- VIEW: ĐĂNG NHẬP USER -->
+    <div id="view-user-login" class="view">
+        <div class="container" style="margin-top: 5vh;">
+            <div class="card">
+                <h1 style="color: #1877f2;">Mạng Xã Hội</h1>
+                <input type="text" id="u-login-name" placeholder="Tên đăng nhập (Người dùng)">
+                <div class="pwd-wrapper">
+                    <input type="password" id="u-login-pass" placeholder="Mật khẩu">
+                    <span class="eye-icon" id="u-eye" onclick="togglePassword('u-login-pass', 'u-eye')">👁️</span>
+                </div>
+                <button id="btn-user-login-submit" onclick="userLogin()">Đăng Nhập</button>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                <button id="btn-user-reg-submit" class="btn-green" onclick="userRegister()">Tạo Tài Khoản Mới</button>
+            </div>
+            <div style="text-align: center;">
+                <button class="btn-link" style="color: #666;" onclick="goTo('#/admin-login')">🛡️ Cổng Quản Trị Viên</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: BẢNG TIN USER -->
+    <div id="view-user-feed" class="view">
+        <div class="top-nav">
+            <b style="color: #1877f2; font-size: 18px;">Bảng Tin</b>
+            <div>
+                <button class="btn-small" style="background: #1877f2; color: white;" onclick="goTo('#/user-feed')">Trang Chủ</button>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-members')">Thành Viên</button>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-settings')">Tài Khoản</button>
+                <button class="btn-gray btn-small" onclick="userLogout()">Đăng Xuất</button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card" id="user-post-box">
+                <h3 style="margin-bottom: 10px;">Chào, <span class="display-user-name" style="color: #1877f2;"></span>!</h3>
+                <textarea id="post-input" rows="3" placeholder="Chia sẻ suy nghĩ, liên kết, hoặc tải tệp lên..."></textarea>
+                
+                <div class="media-upload-zone" onclick="document.getElementById('post-file-input').click()">
+                    <span>📁 Kéo thả hoặc bấm để Đăng Ảnh, Video, Zip, RAR, HTML, Doc...</span>
+                    <input type="file" id="post-file-input" style="display:none;" onchange="handleFileSelect(this)">
+                    <div id="media-preview-container" class="media-preview-box"></div>
+                </div>
+                <button id="btn-user-post" onclick="createPost()">Đăng Bài Viết</button>
+            </div>
+            <div class="card">
+                <h3>Dòng Thời Gian</h3>
+                <div id="user-feed-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: DANH SÁCH THÀNH VIÊN -->
+    <div id="view-user-members" class="view">
+        <div class="top-nav">
+            <b style="color: #1877f2; font-size: 18px;">Thành Viên</b>
+            <div>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-feed')">Trang Chủ</button>
+                <button class="btn-small" style="background: #1877f2; color: white;" onclick="goTo('#/user-members')">Thành Viên</button>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-settings')">Tài Khoản</button>
+                <button class="btn-gray btn-small" onclick="userLogout()">Đăng Xuất</button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h3 style="color:#333;">Danh Sách Thành Viên Mạng</h3>
+                <div id="user-member-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: CÀI ĐẶT USER -->
+    <div id="view-user-settings" class="view">
+        <div class="top-nav">
+            <b style="color: #1877f2; font-size: 18px;">Cài Đặt</b>
+            <div>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-feed')">Trang Chủ</button>
+                <button class="btn-gray btn-small" onclick="goTo('#/user-members')">Thành Viên</button>
+                <button class="btn-small" style="background: #1877f2; color: white;" onclick="goTo('#/user-settings')">Tài Khoản</button>
+                <button class="btn-gray btn-small" onclick="userLogout()">Đăng Xuất</button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h3 style="color: #333; text-align: left; margin-bottom: 20px;">CẬP NHẬT TÀI KHOẢN</h3>
+                <p style="font-size: 14px; color: #666;">Tài khoản hiện tại: <b class="display-user-name"></b></p>
+                
+                <input type="text" id="u-new-username" placeholder="Nhập tên tài khoản mới (Để trống nếu giữ nguyên)">
+                
+                <div class="pwd-wrapper">
+                    <input type="password" id="u-old-pass" placeholder="Nhập mật khẩu cũ (Bắt buộc)">
+                    <span class="eye-icon" id="eye-old" onclick="togglePassword('u-old-pass', 'eye-old')">👁️</span>
+                </div>
+                <div class="pwd-wrapper">
+                    <input type="password" id="u-new-pass" placeholder="Nhập mật khẩu mới (Để trống nếu giữ nguyên)">
+                    <span class="eye-icon" id="eye-new" onclick="togglePassword('u-new-pass', 'eye-new')">👁️</span>
+                </div>
+                <button id="btn-user-changepass" class="btn-green" onclick="updateUserProfile()">Xác Nhận Thay Đổi</button>
+                
+                <hr style="margin: 30px 0; border: 0; border-top: 1px solid #dc3545;">
+                <h4 style="color: #dc3545;">⚠️ RỜI KHỎI MẠNG XÃ HỘI</h4>
+                <button id="btn-user-leave" class="btn-red" onclick="userLeaveNetwork()">Xóa Tài Khoản & Rời Mạng</button>
+                <p id="leave-locked-msg" style="color: #dc3545; font-size: 13px; display: none; margin-top: 10px; font-weight: bold;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: ĐĂNG NHẬP ADMIN -->
+    <div id="view-admin-login" class="view admin-theme">
+        <div class="container" style="margin-top: 5vh;">
+            <div class="card" id="admin-auth-box"></div>
+            <div style="text-align: center;" id="admin-back-btn">
+                <button class="btn-link" style="color: #aaa;" onclick="goTo('#/user-login')">⬅ Trở về Cổng Người Dùng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: DASHBOARD ADMIN -->
+    <div id="view-admin-dashboard" class="view admin-theme">
+        <div class="top-nav admin-nav">
+            <b style="color: #dc3545; font-size: 18px;">Admin Panel (<span class="display-admin-name"></span>)</b>
+            <div>
+                <button class="btn-small" style="background: #dc3545; color: white;" onclick="goTo('#/admin-dashboard')">Bảng Điều Khiển</button>
+                <button class="btn-gray btn-small" onclick="goTo('#/admin-settings')">Cài Đặt</button>
+                <button class="btn-gray btn-small" onclick="adminLogout()">Thoát</button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h3 style="color: #ffc107; text-align: left;">QUẢN LÝ BÀI VIẾT TỔNG</h3>
+                <div id="admin-feed-list"></div>
+            </div>
+            <div class="card">
+                <h3 style="color: #007bff; text-align: left;">QUẢN LÝ THÀNH VIÊN</h3>
+                <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                    <button class="btn-small btn-red" style="flex:1;" onclick="adminBulkToggleLeave(true)">🔒 Khóa Rời Mạng Tất Cả</button>
+                    <button class="btn-small btn-gray" style="flex:1;" onclick="adminBulkToggleLeave(false)">🔓 Mở Rời Mạng Tất Cả</button>
+                </div>
+                <div id="admin-user-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: CÀI ĐẶT ADMIN -->
+    <div id="view-admin-settings" class="view admin-theme">
+        <div class="top-nav admin-nav">
+            <b style="color: #dc3545; font-size: 18px;">Admin Panel (<span class="display-admin-name"></span>)</b>
+            <div>
+                <button class="btn-gray btn-small" onclick="goTo('#/admin-dashboard')">Bảng Điều Khiển</button>
+                <button class="btn-small" style="background: #dc3545; color: white;" onclick="goTo('#/admin-settings')">Cài Đặt</button>
+                <button class="btn-gray btn-small" onclick="adminLogout()">Thoát</button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h3 style="color: #ffc107; text-align: left; margin-bottom: 20px;">Đổi mật khẩu Quản Trị Viên</h3>
+                
+                <div class="setting-row">
+                    <div>
+                        <h4 style="margin: 0; color: white;">Chế độ ẩn danh Admin 🕵️‍♂️</h4>
+                        <span style="font-size: 13px; color: #aaa;">Khi bật, tài khoản Admin sẽ ẩn khỏi danh sách Thành Viên của người dùng.</span>
+                    </div>
+                    <button id="btn-toggle-hide-admin" class="btn-small" onclick="toggleHideAdminMode()"></button>
+                </div>
+
+                <div class="setting-row" style="background: rgba(220, 53, 69, 0.15); padding: 15px; border-radius: 6px; border: 1px dashed #dc3545; margin-bottom: 15px;">
+                    <div>
+                        <h4 style="margin: 0; color: #dc3545;">🚨 CHẾ ĐỘ PHONG TỎA TOÀN HỆ THỐNG</h4>
+                        <span style="font-size: 13px; color: #aaa;">Khi bật, đóng băng toàn bộ tính năng đăng bài và sửa đổi trên toàn trang web.</span>
+                    </div>
+                    <button id="btn-global-lockdown" class="btn-small" onclick="adminToggleGlobalLockdown()"></button>
+                </div>
+                <div class="setting-row">
+                    <div>
+                        <h4 style="margin: 0; color: white;">Chế độ duyệt bài viết</h4>
+                        <span style="font-size: 13px; color: #aaa;">Yêu cầu kiểm duyệt nội dung trước khi xuất bản.</span>
+                    </div>
+                    <button id="btn-toggle-approval" class="btn-small" onclick="toggleApprovalMode()"></button>
+                </div>
+
+                <div class="setting-block">
+                    <p style="font-size: 15px; color: #fff; margin-bottom: 15px;">Tài khoản: <b id="setting-admin-name" style="color: #ffc107;"></b></p>
+                    
+                    <input type="text" id="a-new-username" placeholder="Nhập tên tài khoản Admin mới (Để trống nếu giữ nguyên)">
+                    
+                    <div class="pwd-wrapper">
+                        <input type="password" id="a-old-pass" placeholder="Nhập mật khẩu cũ (Bắt buộc)">
+                        <span class="eye-icon" id="a-eye-old" onclick="togglePassword('a-old-pass', 'a-eye-old')">👁️</span>
+                    </div>
+                    <div class="pwd-wrapper">
+                        <input type="password" id="a-new-pass" placeholder="Nhập mật khẩu mới (Để trống nếu giữ nguyên)">
+                        <span class="eye-icon" id="a-eye-new" onclick="togglePassword('a-new-pass', 'a-eye-new')">👁️</span>
+                    </div>
+                    <button class="btn-green" style="background-color: #42b72a;" onmouseover="this.style.backgroundColor='#36a420'" onmouseout="this.style.backgroundColor='#42b72a'" onclick="updateAdminProfile()">Xác Nhận Đổi Mật Khẩu</button>
+                </div>
+
+                <div class="setting-block" style="border: none; margin-top: 10px; padding-bottom: 0;">
+                    <h4 style="color: #dc3545;">⚠️ KHU VỰC NGUY HIỂM</h4>
+                    <button class="btn-red" style="background-color: transparent; border: 1px solid #dc3545; color: #dc3545;" onmouseover="this.style.backgroundColor='#dc3545'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#dc3545';" onclick="factoryReset()">Xóa Trắng CSDL (Khôi Phục Cài Đặt Gốc)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === JAVASCRIPT === -->
+    <script>
+        let activeUser = null; let activeAdmin = null; let attachedFileData = null; let db = null;
+
+        function initDB(callback) {
+            const request = indexedDB.open("SocialNetworkDB", 1);
+            request.onerror = function(e) { console.error("Không mở được DB"); };
+            request.onsuccess = function(e) { db = e.target.result; if(callback) callback(); };
+            request.onupgradeneeded = function(e) {
+                let database = e.target.result;
+                if (!database.objectStoreNames.contains("posts")) { database.createObjectStore("posts", { keyPath: "id" }); }
+            };
+        }
+
+        function getDBPosts(callback) {
+            if(!db) return callback([]);
+            const tx = db.transaction("posts", "readonly"); const store = tx.objectStore("posts");
+            const request = store.getAll();
+            request.onsuccess = function() {
+                let data = request.result || []; data.sort((a, b) => b.id - a.id); callback(data);
+            };
+        }
+
+        function saveDBPost(postObj, callback) {
+            if(!db) return;
+            const tx = db.transaction("posts", "readwrite"); const store = tx.objectStore("posts");
+            store.put(postObj); tx.oncomplete = function() { if(callback) callback(); };
+        }
+
+        function deleteDBPost(id, callback) {
+            if(!db) return;
+            const tx = db.transaction("posts", "readwrite"); const store = tx.objectStore("posts");
+            store.delete(id); tx.oncomplete = function() { if(callback) callback(); };
+        }
+
+        function updatePostAuthorInDB(oldName, newName, callback) {
+            if(!db) return callback();
+            const tx = db.transaction("posts", "readwrite"); const store = tx.objectStore("posts");
+            const request = store.getAll();
+            request.onsuccess = function() {
+                let posts = request.result || [];
+                posts.forEach(p => {
+                    if(p.author === oldName) { p.author = newName; store.put(p); }
+                });
+                tx.oncomplete = function() { callback(); };
+            };
+        }
+
+        const postSyncChannel = new BroadcastChannel("db_post_sync_channel");
+        postSyncChannel.onmessage = function(e) {
+            if(e.data === "reload_posts") {
+                let hash = window.location.hash;
+                if(hash === '#/user-feed') renderUserFeed();
+                if(hash === '#/admin-dashboard') renderAdminFeed();
+            }
+        };
+        function triggerPostSync() { postSyncChannel.postMessage("reload_posts"); }
+        
+        function reloadState() {
+            activeUser = JSON.parse(localStorage.getItem('db_activeUser')) || null;
+            activeAdmin = JSON.parse(localStorage.getItem('db_activeAdmin')) || null;
+        }
+
+        function factoryReset() {
+            if(confirm("XÓA TOÀN BỘ CƠ SỞ DỮ LIỆU?\nHệ thống sẽ khôi phục về trạng thái ban đầu.")) {
+                localStorage.clear();
+                if(db) {
+                    const tx = db.transaction("posts", "readwrite");
+                    tx.objectStore("posts").clear();
+                    tx.oncomplete = function() { triggerPostSync(); window.location.hash = ''; window.location.reload(); }
+                } else { window.location.hash = ''; window.location.reload(); }
+            }
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId); const icon = document.getElementById(iconId);
+            if (input.type === "password") { input.type = "text"; icon.innerText = "🙈"; } 
+            else { input.type = "password"; icon.innerText = "👁️"; }
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div');
+            toast.className = 'toast'; toast.innerHTML = message; container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4300);
+        }
+
+        function goTo(path) { window.location.hash = path; }
+
+        function handleFileSelect(input) {
+            const file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                attachedFileData = { name: file.name, size: (file.size / 1024).toFixed(1) + " KB", type: file.type || getFileExt(file.name), base64: e.target.result };
+                renderMediaPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+        function getFileExt(filename) { return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); }
+
+        function renderMediaPreview() {
+            const container = document.getElementById('media-preview-container'); container.innerHTML = "";
+            if (!attachedFileData) return;
+            if (attachedFileData.type.startsWith('image/')) { container.innerHTML = `<img src="${attachedFileData.base64}" class="preview-item">`; } 
+            else if (attachedFileData.type.startsWith('video/')) { container.innerHTML = `<div class="preview-file-icon">🎥 VIDEO</div>`; } 
+            else { let ext = getFileExt(attachedFileData.name).toUpperCase() || "FILE"; container.innerHTML = `<div class="preview-file-icon">📄 ${ext}</div>`; }
+        }
+
+        function buildMediaHTML(fileObj) {
+            if (!fileObj) return ""; let type = fileObj.type; let name = fileObj.name; let src = fileObj.base64;
+            if (type.startsWith('image/')) { return `<div class="post-media-container"><img src="${src}" class="post-img" alt="image"></div>`; } 
+            if (type.startsWith('video/')) { return `<div class="post-media-container"><video src="${src}" controls class="post-video"></video></div>`; }
+            if (type === 'html' || name.endsWith('.html') || name.endsWith('.htm')) {
+                let rawHtml = atob(src.split(',')[1]);
+                return `<div class="post-media-container"><div style="font-size:12px; font-weight:bold; color:#666;">🌐 Xem trước HTML nhúng:</div><iframe sandbox="allow-scripts" srcdoc="${rawHtml.replace(/"/g, '&quot;')}" class="html-preview-frame"></iframe><a href="${src}" download="${name}" class="post-file-box"><span>📄 Tải tệp mã nguồn: <b>${name}</b> (${fileObj.size})</span><b style="color:#1877f2;">Tải Về</b></a></div>`;
+            }
+            let ext = getFileExt(name).toUpperCase() || "TỆP TIN";
+            return `<div class="post-media-container"><a href="${src}" download="${name}" class="post-file-box"><span>📦 [${ext}] <b>${name}</b> (${fileObj.size})</span><b style="color:#1877f2;">Tải Về</b></a></div>`;
+        }
+
+        function getAuthorBadgeHTML(authorName) {
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            if(currentAdminUsers.some(a => a.username === authorName)) {
+                return `<span class="author" style="color:#dc3545;">🛡️ ${authorName} <span class="badge-admin-zalo">Admin</span><span class="tick-verify-zalo">✔️</span></span>`;
+            }
+            return `<span class="author">👤 ${authorName}</span>`;
+        }
+
+        function checkGlobalSystemUI() {
+            let isLockdown = JSON.parse(localStorage.getItem('db_systemLockdown')) || false;
+            let banner = document.getElementById('global-lockdown-alert'); let currentHash = window.location.hash;
+            if (isLockdown && !currentHash.includes('admin')) banner.style.display = 'block'; else banner.style.display = 'none';
+
+            if (document.getElementById('btn-user-post')) document.getElementById('btn-user-post').disabled = isLockdown;
+            if (document.getElementById('btn-user-changepass')) document.getElementById('btn-user-changepass').disabled = isLockdown;
+
+            let btnLeave = document.getElementById('btn-user-leave'); let msgLeave = document.getElementById('leave-locked-msg');
+            if (btnLeave) {
+                let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+                let me = activeUser ? normalUsers.find(u => u.username === activeUser.username) : null;
+                let isMyLeaveLocked = me && me.lockLeave;
+                if (isLockdown) { btnLeave.disabled = true; if (msgLeave) { msgLeave.style.display = 'block'; msgLeave.innerText = "🚫 HỆ THỐNG PHONG TỎA TOÀN DIỆN."; } } 
+                else if (isMyLeaveLocked) { btnLeave.disabled = true; if (msgLeave) { msgLeave.style.display = 'block'; msgLeave.innerText = "🚫 Ban Quản Trị đã KHÓA QUYỀN RỜI MẠNG."; } } 
+                else { btnLeave.disabled = false; if (msgLeave) msgLeave.style.display = 'none'; }
+            }
+        }
+
+        function checkUserStatusOnFly() {
+            reloadState();
+            if(activeUser) {
+                let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+                let currentMe = normalUsers.find(u => u.username === activeUser.username);
+                if(!currentMe || currentMe.status === 'blocked') { alert("Tài khoản đã bị Admin khóa chặn!"); userLogout(); }
+            }
+        }
+
+        window.addEventListener('storage', function(e) {
+            reloadState(); checkUserStatusOnFly(); checkGlobalSystemUI();
+            let hash = window.location.hash;
+            if (e.key === 'db_normalUsers' || e.key === 'db_systemLockdown' || e.key === 'db_adminUsers' || e.key === 'db_hideAdmin') {
+                if(hash === '#/admin-dashboard') { renderAdminUsers(); }
+                if(hash === '#/user-members') { renderUserMembers(); }
+            }
+            if (e.key === 'db_requireApproval' && hash === '#/admin-settings') updateApprovalBtnUI();
+            if (e.key === 'db_activeUser' && !e.newValue) goTo('#/user-login');
+            if (e.key === 'db_activeAdmin' && !e.newValue) goTo('#/admin-login');
+            if (e.key === 'db_adminUsers' && hash === '#/admin-login') renderAdminAuth();
+            
+            if (e.key === 'db_activeAdmin' && e.newValue) {
+                let currentAdmin = JSON.parse(e.newValue);
+                document.querySelectorAll('.display-admin-name').forEach(el => el.innerText = currentAdmin.username);
+                let settingNameEl = document.getElementById('setting-admin-name');
+                if(settingNameEl) settingNameEl.innerText = currentAdmin.username;
+            }
+        });
+
+        function router() {
+            let hash = window.location.hash; let body = document.body; reloadState(); checkUserStatusOnFly();
+            if (!hash) hash = '#/user-login';
+            if((hash === '#/user-feed' || hash === '#/user-settings' || hash === '#/user-members') && !activeUser) return goTo('#/user-login');
+            if((hash === '#/admin-dashboard' || hash === '#/admin-settings') && !activeAdmin) return goTo('#/admin-login');
+            if(hash === '#/user-login' && activeUser) return goTo('#/user-feed');
+            if(hash === '#/admin-login' && activeAdmin) return goTo('#/admin-dashboard');
+
+            if(hash === '#/admin-login') renderAdminAuth();
+            if(hash.includes('admin')) body.classList.add('admin-theme'); else body.classList.remove('admin-theme');
+
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            let targetView = document.getElementById('view-' + hash.replace('#/', ''));
+            if(targetView) targetView.classList.add('active-view'); else goTo('#/user-login');
+
+            checkGlobalSystemUI();
+
+            if(hash === '#/user-feed' || hash === '#/user-settings' || hash === '#/user-members') {
+                document.querySelectorAll('.display-user-name').forEach(el => el.innerText = activeUser.username);
+                if(hash === '#/user-feed') { renderUserFeed(); attachedFileData = null; document.getElementById('media-preview-container').innerHTML = ''; }
+                if(hash === '#/user-members') renderUserMembers();
+                if(hash === '#/user-settings') { document.getElementById('u-new-username').value = ''; document.getElementById('u-old-pass').value = ''; document.getElementById('u-new-pass').value = ''; }
+            }
+            if(hash === '#/admin-dashboard' || hash === '#/admin-settings') {
+                document.querySelectorAll('.display-admin-name').forEach(el => el.innerText = activeAdmin.username);
+                if(hash === '#/admin-dashboard') { renderAdminFeed(); renderAdminUsers(); }
+                if(hash === '#/admin-settings') { 
+                    document.getElementById('setting-admin-name').innerText = activeAdmin.username;
+                    document.getElementById('a-new-username').value = ''; document.getElementById('a-old-pass').value = ''; document.getElementById('a-new-pass').value = '';
+                    updateApprovalBtnUI(); updateGlobalLockdownBtnUI(); updateHideAdminBtnUI();
+                }
+            }
+        }
+
+        window.addEventListener('load', function() { initDB(function() { router(); }); });
+        window.addEventListener('hashchange', router);
+
+        function renderAdminAuth() {
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            let authBox = document.getElementById('admin-auth-box'); let backBtn = document.getElementById('admin-back-btn');
+            if(currentAdminUsers.length === 0) {
+                backBtn.style.display = 'none';
+                authBox.innerHTML = `<h1>KHỞI TẠO HỆ THỐNG</h1><p style="color: #aaa; text-align:center; font-size:14px; margin-top:-10px; margin-bottom:20px;">Hệ thống chưa có Admin. Hãy tạo tài khoản Admin đầu tiên!</p><input type="text" id="a-reg-name" placeholder="Tên tài khoản Admin mới"><div class="pwd-wrapper"><input type="password" id="a-reg-pass" placeholder="Mật khẩu bảo mật"><span class="eye-icon" id="a-eye-reg" onclick="togglePassword('a-reg-pass', 'a-eye-reg')">👁️</span></div><button class="btn-red" onclick="adminRegister()">Khởi Tạo Hệ Thống Ngay</button>`;
+            } else {
+                backBtn.style.display = 'block';
+                authBox.innerHTML = `<h1>HỆ THỐNG QUẢN TRỊ</h1><input type="text" id="a-login-name" placeholder="Tên tài khoản Admin"><div class="pwd-wrapper"><input type="password" id="a-login-pass" placeholder="Mật khẩu Admin"><span class="eye-icon" id="a-eye-login" onclick="togglePassword('a-login-pass', 'a-eye-login')">👁️</span></div><button class="btn-red" onclick="adminLogin()">Đăng Nhập Cấp Cao</button>`;
+            }
+        }
+
+        function userRegister() {
+            let u = document.getElementById('u-login-name').value.trim(); let p = document.getElementById('u-login-pass').value.trim();
+            if(!u || !p) return alert("Nhập đủ thông tin đăng ký!");
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            if(currentAdminUsers.some(a => a.username.toLowerCase() === u.toLowerCase())) { return alert("Tên này trùng với tài khoản Admin!"); }
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            if(normalUsers.find(x => x.username === u)) return alert("Tên tài khoản đã tồn tại!");
+            normalUsers.push({ username: u, password: p, status: 'active', lockLeave: false }); 
+            localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers)); alert("Đăng ký thành công!");
+        }
+
+        function userLogin() {
+            let u = document.getElementById('u-login-name').value.trim(); let p = document.getElementById('u-login-pass').value.trim();
+            if(!u || !p) return alert("Vui lòng nhập tài khoản & mật khẩu!");
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            let user = normalUsers.find(x => x.username === u && x.password === p);
+            if(user) {
+                if(user.status === 'blocked') { alert("Tài khoản này đã bị khóa chặn!"); return; }
+                localStorage.setItem('db_activeUser', JSON.stringify(user)); reloadState(); goTo('#/user-feed'); 
+            } else alert("Sai tài khoản hoặc mật khẩu!");
+        }
+        function userLogout() { localStorage.removeItem('db_activeUser'); reloadState(); goTo('#/user-login'); }
+
+        function updateUserProfile() {
+            if(JSON.parse(localStorage.getItem('db_systemLockdown')) || false) return alert("Hệ thống đang phong tỏa!");
+            let newName = document.getElementById('u-new-username').value.trim();
+            let oldPass = document.getElementById('u-old-pass').value.trim();
+            let newPass = document.getElementById('u-new-pass').value.trim();
+
+            if(!oldPass) return alert("Bạn phải nhập mật khẩu cũ để xác nhận!");
+            if(oldPass !== activeUser.password) return alert("Mật khẩu cũ không chính xác!");
+
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            let myIdx = normalUsers.findIndex(u => u.username === activeUser.username);
+
+            let finalName = activeUser.username;
+            let finalPass = activeUser.password;
+
+            if(newName && newName !== activeUser.username) {
+                if(normalUsers.some(u => u.username.toLowerCase() === newName.toLowerCase())) return alert("Tên tài khoản mới này đã tồn tại!");
+                if(currentAdminUsers.some(a => a.username.toLowerCase() === newName.toLowerCase())) return alert("Tên này trùng với tài khoản của Admin!");
+                finalName = newName;
+            }
+
+            if(newPass) { finalPass = newPass; }
+
+            let oldName = activeUser.username;
+            normalUsers[myIdx].username = finalName;
+            normalUsers[myIdx].password = finalPass;
+            activeUser.username = finalName;
+            activeUser.password = finalPass;
+
+            localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers));
+            localStorage.setItem('db_activeUser', JSON.stringify(activeUser));
+
+            document.querySelectorAll('.display-user-name').forEach(el => el.innerText = finalName);
+
+            updatePostAuthorInDB(oldName, finalName, function() {
+                triggerPostSync();
+                alert("Cập nhật thông tin tài khoản thành công!");
+                goTo('#/user-feed');
+            });
+        }
+
+        function updateAdminProfile() {
+            let newName = document.getElementById('a-new-username').value.trim();
+            let oldPass = document.getElementById('a-old-pass').value.trim();
+            let newPass = document.getElementById('a-new-pass').value.trim();
+
+            if(!oldPass) return alert("Bạn phải nhập mật khẩu cũ của Admin để xác nhận!");
+            if(oldPass !== activeAdmin.password) return alert("Mật khẩu cũ không đúng!");
+
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            
+            let myIdx = currentAdminUsers.findIndex(u => u.username === activeAdmin.username);
+            if(myIdx === -1) myIdx = 0;
+
+            let finalName = activeAdmin.username;
+            let finalPass = activeAdmin.password;
+
+            if(newName && newName !== activeAdmin.username) {
+                if(currentAdminUsers.some(a => a.username.toLowerCase() === newName.toLowerCase() && a.username !== activeAdmin.username)) return alert("Tên Admin mới này đã tồn tại!");
+                if(normalUsers.some(u => u.username.toLowerCase() === newName.toLowerCase())) return alert("Tên này đã được người dùng thông thường sử dụng!");
+                finalName = newName;
+            }
+
+            if(newPass) { finalPass = newPass; }
+
+            let oldName = activeAdmin.username;
+            
+            currentAdminUsers[myIdx] = { username: finalName, password: finalPass };
+            localStorage.setItem('db_adminUsers', JSON.stringify(currentAdminUsers));
+            
+            activeAdmin.username = finalName;
+            activeAdmin.password = finalPass;
+            localStorage.setItem('db_activeAdmin', JSON.stringify(activeAdmin));
+
+            document.querySelectorAll('.display-admin-name').forEach(el => el.innerText = finalName);
+            let settingNameEl = document.getElementById('setting-admin-name');
+            if(settingNameEl) settingNameEl.innerText = finalName;
+
+            updatePostAuthorInDB(oldName, finalName, function() {
+                triggerPostSync();
+                alert("Cập nhật thông tin Quản Trị Viên thành công!");
+                goTo('#/admin-dashboard');
+            });
+        }
+
+        function userLeaveNetwork() {
+            if(JSON.parse(localStorage.getItem('db_systemLockdown')) || false) return alert("Hệ thống đang bị phong tỏa!");
+            if(confirm("XÁC NHẬN RỜI MẠNG?")) {
+                let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+                normalUsers = normalUsers.filter(u => u.username !== activeUser.username);
+                localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers));
+                getDBPosts(function(posts) {
+                    posts.forEach(p => { if(p.author === activeUser.username) deleteDBPost(p.id); });
+                    setTimeout(() => { triggerPostSync(); localStorage.removeItem('db_activeUser'); reloadState(); alert("Đã xóa dữ liệu tài khoản thành công!"); goTo('#/user-login'); }, 200);
+                });
+            }
+        }
+
+        function createPost() {
+            if(JSON.parse(localStorage.getItem('db_systemLockdown')) || false) return alert("Hệ thống đang phong tỏa toàn diện!");
+            checkUserStatusOnFly(); let txt = document.getElementById('post-input').value.trim(); 
+            if(!txt && !attachedFileData) return alert("Hãy nhập chữ hoặc chọn một tập tin đính kèm!");
+            let requireApproval = JSON.parse(localStorage.getItem('db_requireApproval')) || false;
+            let postStatus = requireApproval ? 'pending' : 'approved';
+            let newPost = { id: Date.now(), author: activeUser.username, content: txt, file: attachedFileData, status: postStatus };
+            saveDBPost(newPost, function() {
+                document.getElementById('post-input').value = ''; document.getElementById('post-file-input').value = ''; attachedFileData = null; document.getElementById('media-preview-container').innerHTML = "";
+                if(requireApproval) showToast("⏳ Bài viết chứa dữ liệu đang chờ kiểm duyệt."); else showToast("✅ Đăng tải nội dung thành công!");
+                triggerPostSync(); renderUserFeed();
+            });
+        }
+
+        function renderUserMembers() {
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            let isHideAdmin = JSON.parse(localStorage.getItem('db_hideAdmin')) || false;
+            let list = document.getElementById('user-member-list'); list.innerHTML = "";
+
+            if (!isHideAdmin) {
+                currentAdminUsers.forEach(admin => {
+                    list.innerHTML += `<div class="member-item" style="background: rgba(24, 119, 242, 0.05); padding: 12px; border-radius: 6px; margin-bottom: 5px; border: 1px solid rgba(24, 119, 242, 0.1);"><div><span style="font-size:16px; font-weight:bold; color:#dc3545;">🛡️ ${admin.username}</span><span class="badge-admin-zalo">Admin</span><span class="tick-verify-zalo">✔️</span></div><span style="font-size:12px; color:#1877f2; font-weight:bold;">Hệ Thống</span></div>`;
+                });
+            }
+            if(normalUsers.length === 0 && (currentAdminUsers.length === 0 || isHideAdmin)) { list.innerHTML = "<p style='color:#666;'>Chưa có thành viên nào.</p>"; return; }
+            normalUsers.forEach(u => {
+                let isMe = u.username === activeUser.username ? " <span style='color:#1877f2; font-size:12px;'>(Bạn)</span>" : "";
+                let isBlocked = u.status === 'blocked' ? " <span style='color:#dc3545; font-size:12px;'>(Bị Chặn)</span>" : "";
+                let isLeaveLocked = u.lockLeave ? " <span style='color:#ffc107; font-size:12px;'>(Bị giữ chân)</span>" : "";
+                list.innerHTML += `<div class="member-item"><div><span style="font-size:16px; font-weight:500;">👤 ${u.username}</span>${isMe} ${isBlocked} ${isLeaveLocked}</div></div>`;
+            });
+        }
+
+        function renderUserFeed() {
+            getDBPosts(function(posts) {
+                let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+                let list = document.getElementById('user-feed-list');
+                let visiblePosts = posts.filter(p => {
+                    let authorData = normalUsers.find(u => u.username === p.author);
+                    if (authorData && authorData.status === 'blocked') return false; 
+                    if (p.status === 'pending') return false; 
+                    return true; 
+                });
+                list.innerHTML = visiblePosts.length ? "" : "<p style='color:#666;'>Chưa có bài viết công khai.</p>";
+                let isLockdown = JSON.parse(localStorage.getItem('db_systemLockdown')) || false;
+                visiblePosts.forEach(p => { 
+                    let isDisabled = isLockdown ? "disabled" : "";
+                    let deleteButton = (p.author === activeUser.username) ? `<button class="btn-outline-red btn-small" ${isDisabled} style="margin: 0; padding: 4px 8px; font-size: 12px;" onclick="userDeletePost(${p.id})">🗑️ Xóa</button>` : "";
+                    let mediaHTML = buildMediaHTML(p.file); let authorHTML = getAuthorBadgeHTML(p.author);
+                    list.innerHTML += `<div class="post"><div style="display:flex; justify-content:space-between; align-items:center;"><div>${authorHTML}</div>${deleteButton}</div><div style="margin-top: 8px; white-space: pre-wrap;">${p.content}</div>${mediaHTML}</div>`; 
+                });
+            });
+        }
+
+        function userDeletePost(id) {
+            if(JSON.parse(localStorage.getItem('db_systemLockdown')) || false) return alert("Đang phong tỏa hệ thống!");
+            if(confirm("Xóa bài viết này?")) { deleteDBPost(id, function() { triggerPostSync(); renderUserFeed(); }); }
+        }
+
+        function adminRegister() {
+            let u = document.getElementById('a-reg-name').value.trim(); let p = document.getElementById('a-reg-pass').value.trim();
+            if(!u || !p) return alert("Không để trống thông tin Admin!");
+            let currentAdminUsers = [];
+            let newAdmin = { username: u, password: p }; currentAdminUsers.push(newAdmin);
+            localStorage.setItem('db_adminUsers', JSON.stringify(currentAdminUsers));
+            localStorage.setItem('db_activeAdmin', JSON.stringify(newAdmin)); reloadState(); goTo('#/admin-dashboard');
+        }
+        function adminLogin() {
+            let u = document.getElementById('a-login-name').value.trim(); let p = document.getElementById('a-login-pass').value.trim();
+            if(!u || !p) return alert("Nhập đủ thông tin Admin!");
+            let currentAdminUsers = JSON.parse(localStorage.getItem('db_adminUsers')) || [];
+            let admin = currentAdminUsers.find(x => x.username === u && x.password === p);
+            if(admin) { localStorage.setItem('db_activeAdmin', JSON.stringify(admin)); reloadState(); goTo('#/admin-dashboard'); } else alert("Tài khoản hoặc mật khẩu Quản trị sai!");
+        }
+        function adminLogout() { localStorage.removeItem('db_activeAdmin'); reloadState(); goTo('#/admin-login'); }
+
+        function toggleHideAdminMode() {
+            let cur = JSON.parse(localStorage.getItem('db_hideAdmin')) || false;
+            localStorage.setItem('db_hideAdmin', JSON.stringify(!cur)); updateHideAdminBtnUI();
+        }
+        function updateHideAdminBtnUI() {
+            let isHide = JSON.parse(localStorage.getItem('db_hideAdmin')) || false; let btn = document.getElementById('btn-toggle-hide-admin');
+            if(btn) { btn.innerText = isHide ? "ĐANG ẨN 🕵️‍♂️" : "ĐANG HIỆN 👀"; btn.className = isHide ? "btn-small btn-red" : "btn-small btn-gray"; }
+        }
+        function adminToggleGlobalLockdown() {
+            let cur = JSON.parse(localStorage.getItem('db_systemLockdown')) || false;
+            localStorage.setItem('db_systemLockdown', JSON.stringify(!cur)); updateGlobalLockdownBtnUI();
+        }
+        function updateGlobalLockdownBtnUI() {
+            let isLockdown = JSON.parse(localStorage.getItem('db_systemLockdown')) || false; let btn = document.getElementById('btn-global-lockdown');
+            if(btn) { btn.innerText = isLockdown ? "ĐANG PHONG TỎA 🚨" : "BÌNH THƯỜNG 🔓"; btn.className = isLockdown ? "btn-small btn-red" : "btn-small btn-gray"; }
+        }
+        function toggleApprovalMode() {
+            let requireApproval = JSON.parse(localStorage.getItem('db_requireApproval')) || false;
+            localStorage.setItem('db_requireApproval', JSON.stringify(!requireApproval)); updateApprovalBtnUI();
+        }
+        function updateApprovalBtnUI() {
+            let requireApproval = JSON.parse(localStorage.getItem('db_requireApproval')) || false; let btn = document.getElementById('btn-toggle-approval');
+            if(btn) { btn.innerText = requireApproval ? "ĐANG BẬT" : "ĐANG TẤT"; btn.className = requireApproval ? "btn-small btn-green" : "btn-small btn-gray"; }
+        }
+
+        function renderAdminFeed() {
+            getDBPosts(function(posts) {
+                let list = document.getElementById('admin-feed-list'); list.innerHTML = posts.length ? "" : "<p style='color:#aaa;'>Không có bài viết nào.</p>";
+                posts.forEach(p => {
+                    let isPending = p.status === 'pending';
+                    let approveBtn = isPending ? `<button class="btn-green btn-small" style="font-size:12px;" onclick="adminApprovePost(${p.id})">✅ Duyệt</button>` : "";
+                    let mediaHTML = buildMediaHTML(p.file); let authorHTML = getAuthorBadgeHTML(p.author);
+                    list.innerHTML += `<div class="post" style="border-bottom: 1px solid #333;"><div style="display:flex; justify-content:space-between; align-items:center;"><div>${authorHTML} ${isPending ? '<span class="badge-pending">CHỜ DUYỆT</span>':''}</div><div style="display:flex; gap:5px;">${approveBtn}<button class="btn-red btn-small" style="font-size:12px;" onclick="adminDeletePost(${p.id})">🗑️ Xóa</button></div></div><div style="margin-top:8px; color:#ddd; white-space: pre-wrap;">${p.content}</div>${mediaHTML}</div>`;
+                });
+            });
+        }
+
+        function adminApprovePost(id) {
+            if(!db) return;
+            const tx = db.transaction("posts", "readwrite"); const store = tx.objectStore("posts");
+            store.get(id).onsuccess = function(e) {
+                let post = e.target.result;
+                if(post) { post.status = 'approved'; store.put(post); tx.oncomplete = function() { triggerPostSync(); renderAdminFeed(); }; }
+            };
+        }
+        function adminDeletePost(id) { if(confirm("Xóa bài viết này?")) { deleteDBPost(id, function() { triggerPostSync(); renderAdminFeed(); }); } }
+
+        // === CẬP NHẬT GIAO DIỆN QUAN LÝ THÀNH VIÊN VỚI NÚT XEM CHI TIẾT ===
+        function renderAdminUsers() {
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            let list = document.getElementById('admin-user-list'); list.innerHTML = normalUsers.length ? "" : "<p style='color:#aaa;'>Chưa có thành viên nào.</p>";
+            normalUsers.forEach(u => {
+                let isBlocked = u.status === 'blocked'; let isLockLeave = u.lockLeave || false;
+                let blockBtnText = isBlocked ? "🔓 Mở Khóa" : "🚫 Khóa Acc"; let blockBtnClass = isBlocked ? "btn-gray" : "btn-red";
+                let leaveBtnText = isLockLeave ? "🔒 Khóa Rời Mạng" : "🔓 Cho Rời Mạng"; let leaveBtnClass = isLockLeave ? "btn-red" : "btn-gray";
+                list.innerHTML += `<div class="member-item" style="flex-direction: column; align-items: flex-start; gap: 8px;"><span>👤 <b>${u.username}</b> ${isBlocked ? '<span style="color:#dc3545; font-size:12px;">(ĐANG BỊ KHÓA)</span>':''}</span><div style="display:flex; gap:5px; width: 100%; flex-wrap: wrap;"><button class="btn-small" style="background:#007bff; font-size:12px; flex: 1; min-width: 90px;" onclick="openUserInfoModal('${u.username}')">🔍 Xem Chi Tiết</button><button class="${leaveBtnClass} btn-small" style="font-size:12px; flex: 1; min-width: 120px;" onclick="adminToggleUserLeave('${u.username}')">${leaveBtnText}</button><button class="${blockBtnClass} btn-small" style="font-size:12px;" onclick="adminToggleBlockUser('${u.username}')">${blockBtnText}</button><button class="btn-red btn-small" style="font-size:12px; background:#8b0000;" onclick="adminKickUser('${u.username}')">🗑️ Xóa</button></div></div>`;
+            });
+        }
+
+        // === LOGIC PHẦN MODAL XEM CHI TIẾT THÀNH VIÊN ===
+        function openUserInfoModal(username) {
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            let user = normalUsers.find(u => u.username === username);
+            if(!user) return alert("Thành viên không tồn tại!");
+
+            getDBPosts(function(posts) {
+                let userPostsCount = posts.filter(p => p.author === username).length;
+                
+                document.getElementById('modal-username').innerText = user.username;
+                
+                let pwdEl = document.getElementById('modal-password');
+                pwdEl.innerText = user.password;
+                pwdEl.style.textSecurity = 'disc';
+                pwdEl.style.webkitTextSecurity = 'disc';
+                document.getElementById('modal-eye-btn').innerText = "👁️";
+
+                let statusEl = document.getElementById('modal-status');
+                if(user.status === 'blocked') { statusEl.innerText = "Đang Bị Khóa Trực Tuyến 🚫"; statusEl.style.color = '#dc3545'; }
+                else { statusEl.innerText = "Đang Hoạt Động Bình Thường 🟢"; statusEl.style.color = '#42b72a'; }
+
+                let leaveEl = document.getElementById('modal-leave');
+                if(user.lockLeave) { leaveEl.innerText = "Bị Giữ Chân (Không Thể Tự Xóa Acc) 🔒"; leaveEl.style.color = '#ffc107'; }
+                else { leaveEl.innerText = "Tự Do (Có Quyền Rời Mạng) 🔓"; leaveEl.style.color = '#eee'; }
+
+                document.getElementById('modal-posts-count').innerText = userPostsCount + " bài viết";
+
+                document.getElementById('user-info-modal').classList.add('open');
+            });
+        }
+
+        function closeUserInfoModal() {
+            document.getElementById('user-info-modal').classList.remove('open');
+        }
+
+        function toggleModalPassword() {
+            let pwdEl = document.getElementById('modal-password');
+            let eyeBtn = document.getElementById('modal-eye-btn');
+            if(pwdEl.style.textSecurity === 'none' || pwdEl.style.webkitTextSecurity === 'none') {
+                pwdEl.style.textSecurity = 'disc';
+                pwdEl.style.webkitTextSecurity = 'disc';
+                eyeBtn.innerText = "👁️";
+            } else {
+                pwdEl.style.textSecurity = 'none';
+                pwdEl.style.webkitTextSecurity = 'none';
+                eyeBtn.innerText = "🙈";
+            }
+        }
+
+        function adminBulkToggleLeave(status) {
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || [];
+            normalUsers.forEach(u => u.lockLeave = status); localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers)); renderAdminUsers();
+        }
+        function adminToggleUserLeave(username) {
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || []; let u = normalUsers.find(x => x.username === username);
+            if(u) { u.lockLeave = !u.lockLeave; localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers)); renderAdminUsers(); }
+        }
+        function adminToggleBlockUser(username) {
+            let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || []; let user = normalUsers.find(u => u.username === username);
+            if(user) {
+                user.status = user.status === 'blocked' ? 'active' : 'blocked'; localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers));
+                if(activeUser && activeUser.username === username && user.status === 'blocked') userLogout();
+                renderAdminUsers();
+            }
+        }
+        function adminKickUser(username) {
+            if(confirm(`XÓA VĨNH VIỄN tài khoản [ ${username} ]?`)) {
+                let normalUsers = JSON.parse(localStorage.getItem('db_normalUsers')) || []; normalUsers = normalUsers.filter(u => u.username !== username);
+                localStorage.setItem('db_normalUsers', JSON.stringify(normalUsers));
+                getDBPosts(function(posts) {
+                    posts.forEach(p => { if(p.author === username) deleteDBPost(p.id); });
+                    setTimeout(() => { triggerPostSync(); if(activeUser && activeUser.username === username) userLogout(); renderAdminUsers(); }, 200);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
